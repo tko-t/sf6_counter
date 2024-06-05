@@ -1,11 +1,11 @@
 import Select from 'react-select';
 
 export const CharaSelecter = (props) => {
-  const { onChange, list } = props
+  const { onChange, list, placeholder } = props
   const onChangeHandler = (event) => {
     onChange(event.value)
   }
   return (
-    <Select options={list} onChange={ (e) => onChangeHandler(e) }/>
+    <Select placeholder={placeholder} options={list} onChange={ (e) => onChangeHandler(e) }/>
   )
 }

@@ -15,7 +15,7 @@ export const App = () => {
     CsvReader(SF6FrameData, setSf6FrameData)
   }, []);
 
-  // キャラ表
+  // キャラ表作成
   useEffect(() => {
     const uniqueCharacterList = new Set();
     sf6FrameData.map(row => {
@@ -26,6 +26,9 @@ export const App = () => {
     }));
   }, [sf6FrameData]);
 
+  // "発生", "ダメージ", "ガード硬直" があって
+  // 事前動作の不要な攻撃リスト
+  // 自分用
   const frameTableForSelf = {};
   const frameTableBySelf = () => {
     if (!frameTableForSelf[mySelf]) {
@@ -37,6 +40,8 @@ export const App = () => {
     return frameTableForSelf[mySelf];
   };
 
+  // "ガード硬直" がある攻撃リスト
+  // 敵用
   const frameTableForEnemy = {};
   const frameTableByEnemy = () => {
     if (!frameTableForEnemy[enemy]) {
@@ -56,7 +61,7 @@ export const App = () => {
 
   }, [mySelf]);
 
-  // 敵選択
+  // 敵のキャラ選択
   useEffect(() => {
     if (!mySelf) return;
 
@@ -65,8 +70,18 @@ export const App = () => {
 
   }, [enemy]);
 
+  // 敵の行動のガード硬直より少ないフレームで発生できる技をフィルタ
+  // {
+  //   弱P: {
+  //     counters: [{ sName: 弱P, sFire: 4, sDamage: 300, sCommand: PL }, ...]
+  //     eGuard: -6
+  //   },
+  //   中K: {
+  //     counters: [...],
+  //     eGuard: -7
+  //   }
+  // }
   const [matchingTable, setMatchingTable] = useState([]);
-
   const match = () => {
     setMatchingTable(frameTableByEnemy().map(enemyRow => {
       const counter = {}
@@ -87,17 +102,31 @@ export const App = () => {
       if (0 < Object.keys(counter).length) {
         return counter
       }
-    }).filter(v => v)
-  )
+    }).filter(v => v))
   }
 
-  console.log(matchingTable);
+  const summaryHeader = () => {
+    if (matchingTable.length == 0) return;
+
+    return (
+      <div style={ { textAlign: 'center', width: "100%" } }>
+        <span style={ { fontWeight: 'bold'} }>ガード後に殴り返せるかもしれないリスト</span>
+      </div>
+    )
+  }
+
   return (
     <div>
       <HBox>
-        <CharaSelecter list={characterList} onChange={setMySelf}/>
-        <CharaSelecter list={characterList} onChange={setEnemy}/>
+        <div style={ { width: "100%" } }>
+          <CharaSelecter placeholder="あなた" list={characterList} onChange={setMySelf}/>
+        </div>
+        <div><span>VS</span></div>
+        <div style={ { width: "100%" } }>
+          <CharaSelecter placeholder="敵" list={characterList} onChange={setEnemy}/>
+        </div>
       </HBox>
+      { summaryHeader() }
       <div>
         { matchingTable.map((matching, idx) => {
           const targetArts = Object.keys(matching)[0]

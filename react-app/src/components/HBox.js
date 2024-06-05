@@ -1,9 +1,10 @@
 export const HBox = (props) => {
   const style = {
     display: "flex",
-    flexWrap: "wrap",
+    flexWrap: "noWrap",
     padding: "10px",
     gap: "20px",
+    alignItems: 'center',
   }
 
   return (
