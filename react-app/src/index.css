@@ -5,6 +5,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color: #555;
 }
 
 code {
@@ -13,12 +14,42 @@ code {
 }
 
 details {
-  border: 1px solid #999;
-  margin: 10px;
-  padding: 4px 10px;
+  border-bottom: 1px solid #999;
+  border-left: 1px solid #999;
+  border-right: 1px solid #999;
   font-weight: bold;
+  background-color: #ededed;
+  margin: 0 10px;
 }
 
 summary {
   list-style: none;
+  padding: 8px;
+}
+
+details.introduction {
+  background-color: #fcfcfc;
+  border: 1px solid #999;
+}
+
+.detail_item {
+  padding: 4px;
+  padding-left: 8px;
+}
+
+small {
+  font-size: 12px;
+}
+
+.coutions {
+  display: flex;
+  flex-direction: column;
+}
+
+.counter_a {
+  background-color: #ffffff;
+}
+
+.counter_b {
+  background-color: #fef7f7;
 }
