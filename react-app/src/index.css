@@ -53,3 +53,11 @@ small {
 .counter_b {
   background-color: #fef7f7;
 }
+
+.link-block {
+  margin: 4px auto;
+  font-weight: bold;
+}
+.link-block a {
+  color: #555;
+}

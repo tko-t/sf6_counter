@@ -10,6 +10,7 @@ export const App = () => {
   const [mySelf, setMySelf] = useState(null);
   const [enemy, setEnemy]   = useState(null);
   const [burnOut, setBurnOut] = useState(0);
+  const [driverush, setDriverush] = useState(0);
 
   // csvロード
   useEffect(() => {
@@ -18,12 +19,12 @@ export const App = () => {
 
   // キャラ表作成
   useEffect(() => {
-    const uniqueCharacterList = new Set();
+    const uniqueCharacterList = {};
     sf6FrameData.map(row => {
-      uniqueCharacterList.add(row['char'])
+      uniqueCharacterList[row.key] = row.char
     });
-    setCharacterList(Array.from(uniqueCharacterList).map( char => {
-      return { value: char, label: char }
+    setCharacterList(Object.keys(uniqueCharacterList).map( key => {
+      return { value: key, label: uniqueCharacterList[key] }
     }));
   }, [sf6FrameData]);
 
@@ -34,7 +35,7 @@ export const App = () => {
     if (!frameTableForSelf[mySelf]) {
       const reg = /.*(中に|後に|時に|段目).*/
       frameTableForSelf[mySelf] = sf6FrameData.filter((row) => {
-        return row.char == mySelf && row.fire && 0 < row.damage && row.guard && !reg.test(row.command) && !reg.test(row.name)
+        return row.key == mySelf && row.fire && 0 < row.damage && row.guard && !reg.test(row.command) && !reg.test(row.name)
       })
     }
     return frameTableForSelf[mySelf];
@@ -45,27 +46,23 @@ export const App = () => {
   const frameTableByEnemy = () => {
     if (!frameTableForEnemy[enemy]) {
       frameTableForEnemy[enemy] = sf6FrameData.filter((row) => {
-        return row['char'] == enemy && row['guard']
+        return row.key == enemy && row.guard
       })
     }
     return frameTableForEnemy[enemy];
   };
 
   // 自分のキャラ選択
+  // 敵のキャラ選択
+  // バーンアウト
+  // ドライブラッシュ
   useEffect(() => {
+    if (!mySelf) return;
     if (!enemy) return;
 
     match()
 
-  }, [mySelf, burnOut]);
-
-  // 敵のキャラ選択
-  useEffect(() => {
-    if (!mySelf) return;
-
-    match()
-
-  }, [enemy, burnOut]);
+  }, [enemy, mySelf, burnOut, driverush]);
 
   // 敵の行動のガード硬直より少ないフレームで発生できる技をフィルタ
   // {
@@ -79,12 +76,20 @@ export const App = () => {
   //   }
   // }
   const [matchingTable, setMatchingTable] = useState([]);
+  const isAffectedDriveRush = (skillType, skillName) => {
+    return /(通常技|特殊技)/.test(skillType) && !/(中に|後に|段目)/.test(skillName);
+  }
+
   const match = () => {
     setMatchingTable(frameTableByEnemy().map(enemyRow => {
       const counter = {}
       frameTableBySelf().map(selfRow => {
+        const exFrame  = isAffectedDriveRush(enemyRow.skill_type, enemyRow.name) ?
+          burnOut + driverush
+          :
+          burnOut;
         // バーンアウト中は殴られ硬直が4フレーム長くなる
-        const eGuard   = parseInt(enemyRow.guard) + burnOut;
+        const eGuard   = parseInt(enemyRow.guard) + exFrame;
         const eCommand = enemyRow.command;
         const fire     = parseInt(selfRow.fire);
         const damage   = selfRow.damage;
@@ -116,11 +121,13 @@ export const App = () => {
       <div style={ { textAlign: 'center', width: "100%" } }>
         <details className="introduction">
           <summary>
-            <span>ガード後に殴り返せるかもしれないリスト</span>
+            <span>ガード後に殴り返せるかもリスト</span>
           </summary>
           <div className="detail_item coutions">
-            <small>敵の不利フレームより速い発生を持つ技の一覧です</small>
+            <small>敵の不利フレームより速い発生技一覧</small>
             <small>ガード後の距離やリーチは考慮してないです</small>
+            <small>バーンアウト中はガード硬直4F増し</small>
+            <small>ドライブラッシュ中はガード硬直2F増し(通常技、特殊技）</small>
             <small>[...]は不利フレーム</small>
             <small>202405 Ver.</small>
           </div>
@@ -137,21 +144,45 @@ export const App = () => {
     }
   }
 
+  const onDriverush = (e) => {
+    if (e.target.checked == true) {
+      setDriverush(2); // ドライブラッシュ中は殴り硬直が2フレーム短くなる
+    } else {
+      setDriverush(0);
+    }
+  }
+
+  const command_list = (key) => {
+    if (!mySelf) return;
+    if (!enemy) return;
+    return (
+      <div className="link-block">
+        <a href={`https://www.streetfighter.com/6/ja-jp/character/${key}/movelist`} target="_blank">COMMAND LIST</a>
+      </div>
+    )
+  };
+
   return (
     <div>
       <HBox>
         <div style={ { width: "100%" } }>
           <CharaSelecter placeholder="あなた" list={characterList} onChange={setMySelf}/>
+          <div style={ { marginLeft: "10px", padding: "4px 8px 8px 0"} }>
+            <input id="burnout" type="checkbox" onChange={ (e) => onBurnout(e) }/>
+            <label htmlFor="burnout">バーンアウト中</label>
+            { command_list(mySelf) }
+          </div>
         </div>
         <div><span>VS</span></div>
         <div style={ { width: "100%" } }>
           <CharaSelecter placeholder="敵" list={characterList} onChange={setEnemy}/>
+          <div style={ { marginLeft: "10px", padding: "4px 8px 8px 0"} }>
+            <input id="driverush" type="checkbox" onChange={ (e) => onDriverush(e) }/>
+            <label htmlFor="driverush">ドライブラッシュ</label>
+            { command_list(enemy) }
+          </div>
         </div>
       </HBox>
-      <div style={ { marginLeft: "10px", padding: "4px 8px 8px 0"} }>
-        <input id="burnout" type="checkbox" onChange={ (e) => onBurnout(e) }/>
-        <label htmlFor="burnout">バーンアウト中</label>
-      </div>
       { summaryHeader() }
       <div>
         { matchingTable.map((matching, idx) => {
@@ -162,24 +193,21 @@ export const App = () => {
             <details key={targetArts}>
               <summary>
                 <span style={ { minWidth: "40px", display: "inline-block" } }>[{targetArtsFrame}]</span>
-                <span>{targetArts}</span>
+                <span>{ targetArts }</span>
               </summary>
               { counters.map((counter, num) => {
-                const counterName = counter.sName;
-                const counterFireFrame = counter.sFire;
-                const counterCommand = counter.sCommand;
                 return (
                   <div key={Math.random()}  className={`detail_item counter_${ num % 2 == 0 ? "a" : "b"}`}>
                     <div>
-                      <span>{ counterName}</span>
+                      <span>{ counter.sName }</span>
                     </div>
                     <div>
                       <span>発生：</span>
-                      <span>{ counterFireFrame }</span>
+                      <span>{ counter.sFire }</span>
                     </div>
                     <div>
                       <span>コマンド：</span>
-                      <span>{counterCommand}</span>
+                      <span>{ counter.sCommand }</span>
                     </div>
                   </div>
                 )
