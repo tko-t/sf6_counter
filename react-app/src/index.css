@@ -61,3 +61,22 @@ small {
 .link-block a {
   color: #555;
 }
+
+table.detail-arts {
+  margin: 10px auto;
+  font-size: 12px;
+}
+.detail-arts-header {
+  text-align: right;
+  vertical-align: top;
+  font-weight: bold;
+}
+
+.detail-arts-body {
+  text-align: left;
+  vertical-align: top;
+}
+
+.comment-line {
+  margin: 0;
+}

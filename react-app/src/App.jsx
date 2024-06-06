@@ -3,6 +3,7 @@ import { CharaSelecter } from './components/character_select';
 import SF6FrameData from './sf6_frames.csv';
 import CsvReader from './lib/CsvReader'
 import { HBox } from './components/HBox';
+import { Modal } from './components/Modal';
 
 export const App = () => {
   const [sf6FrameData, setSf6FrameData] = useState([]);
@@ -11,6 +12,7 @@ export const App = () => {
   const [enemy, setEnemy]   = useState(null);
   const [burnOut, setBurnOut] = useState(0);
   const [driverush, setDriverush] = useState(0);
+  const [showModal, setShowModal] = useState(false);
 
   // csvロード
   useEffect(() => {
@@ -89,18 +91,21 @@ export const App = () => {
           :
           burnOut;
         // バーンアウト中は殴られ硬直が4フレーム長くなる
-        const eGuard   = parseInt(enemyRow.guard) + exFrame;
-        const eCommand = enemyRow.command;
-        const fire     = parseInt(selfRow.fire);
-        const damage   = selfRow.damage;
-        const command  = selfRow.command;
-        const counterKey = `${enemyRow.name} ： ${eCommand}`;
+        const eGuard   = parseInt(enemyRow.guard) + exFrame; // ガード硬直
+        const eName    = enemyRow.name;                      // 技名
+        const eCommand = enemyRow.command;                   // 敵方コマンド
+        const fire     = parseInt(selfRow.fire);             // 発生
+        const damage   = selfRow.damage;                     // ダメージ
+        const command  = selfRow.command;                    // 自分コマンド
+        const counterKey = `${enemyRow.name} ： ${eCommand}`; // 技名とコマンドでユニーク化
+        const eKey     = enemyRow.key;                        // 敵英語名
         if(-eGuard >= fire) {
           counter[counterKey] ||= {
-            counters: [], eGuard
+            counters: [], eGuard, eName, eKey
           }
 
           counter[counterKey]['counters'].push({
+            sKey:  selfRow.key,
             sName: selfRow.name,
             sFire: fire,
             sDamage: damage,
@@ -126,8 +131,8 @@ export const App = () => {
           <div className="detail_item coutions">
             <small>敵の不利フレームより速い発生技一覧</small>
             <small>ガード後の距離やリーチは考慮してないです</small>
-            <small>バーンアウト中はガード硬直4F増し</small>
-            <small>ドライブラッシュ中はガード硬直2F増し(通常技、特殊技）</small>
+            <small>burnoutはガード硬直4F増し</small>
+            <small>driverushはガード硬直2F増し(通常、特殊技）</small>
             <small>[...]は不利フレーム</small>
             <small>202405 Ver.</small>
           </div>
@@ -162,14 +167,63 @@ export const App = () => {
     )
   };
 
+  const [currentArts, setCurrentArts] = useState(null);
+  const setDetailModal = ({artsName, char}) => {
+    const arts = sf6FrameData.filter((row) => {
+      return row.key == char && row.name == artsName
+    })[0]
+
+    setCurrentArts(arts)
+    setShowModal(true)
+  }
+
+  const detailArts = () => {
+    if (!currentArts) return;
+
+    return (
+      <div style={{ backgroundColor: "#fff", margin:"30% auto", minWidth: "55%", maxWidth: "99%", width: "fit-content"}}>
+        <table className="detail-arts">
+          <tbody>
+            <tr><td className="detail-arts-header">技名</td><td className="detail-arts-body">{currentArts?.name}</td></tr>
+            <tr><td className="detail-arts-header">発生</td><td className="detail-arts-body">{currentArts?.fire}</td></tr>
+            <tr><td className="detail-arts-header">持続</td><td className="detail-arts-body">{currentArts?.fire}-{currentArts?.persistence}</td></tr>
+            <tr><td className="detail-arts-header">硬直</td><td className="detail-arts-body">{currentArts?.rigidity}</td></tr>
+            <tr><td className="detail-arts-header">全体フレーム</td><td className="detail-arts-body">{currentArts?.total_frame}</td></tr>
+            <tr><td className="detail-arts-header">硬直差[hit]</td><td className="detail-arts-body">{currentArts?.hit}</td></tr>
+            <tr><td className="detail-arts-header">硬直差[guard]</td><td className="detail-arts-body">{currentArts?.guard}</td></tr>
+            <tr><td className="detail-arts-header">キャンセル</td><td className="detail-arts-body">{currentArts?.cancel}</td></tr>
+            <tr><td className="detail-arts-header">ダメージ</td><td className="detail-arts-body">{currentArts?.damage}</td></tr>
+            <tr><td className="detail-arts-header">コンボ補正</td><td className="detail-arts-body">{currentArts?.correction}</td></tr>
+            <tr><td className="detail-arts-header">Dゲージ[hit]</td><td className="detail-arts-body">{currentArts?.d_hit}</td></tr>
+            <tr><td className="detail-arts-header">Dケージ[guard]</td><td className="detail-arts-body">{currentArts?.d_guard}</td></tr>
+            <tr><td className="detail-arts-header">Dゲージ[punish]</td><td className="detail-arts-body">{currentArts?.d_punish}</td></tr>
+            <tr><td className="detail-arts-header">SAゲージ</td><td className="detail-arts-body">{currentArts?.sa_gauge}</td></tr>
+            <tr><td className="detail-arts-header">属性</td><td className="detail-arts-body">{currentArts?.attack_type}</td></tr>
+            <tr><td className="detail-arts-header">備考</td><td className="detail-arts-body">
+              { currentArts.skill_type }<br></br>
+              { currentArts.comment.split("@@EOL@@").map( (comment, idx) => (
+                  <p className="comment-line" key={idx}>
+                    { comment }
+                  </p>
+              ))}
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+
   return (
     <div>
+      <Modal showModal={showModal} setShowModal={setShowModal}>
+        { detailArts() }
+      </Modal>
       <HBox>
         <div style={ { width: "100%" } }>
           <CharaSelecter placeholder="あなた" list={characterList} onChange={setMySelf}/>
           <div style={ { marginLeft: "10px", padding: "4px 8px 8px 0"} }>
             <input id="burnout" type="checkbox" onChange={ (e) => onBurnout(e) }/>
-            <label htmlFor="burnout">バーンアウト中</label>
+            <label htmlFor="burnout">burnout</label>
             { command_list(mySelf) }
           </div>
         </div>
@@ -178,22 +232,29 @@ export const App = () => {
           <CharaSelecter placeholder="敵" list={characterList} onChange={setEnemy}/>
           <div style={ { marginLeft: "10px", padding: "4px 8px 8px 0"} }>
             <input id="driverush" type="checkbox" onChange={ (e) => onDriverush(e) }/>
-            <label htmlFor="driverush">ドライブラッシュ</label>
+            <label htmlFor="driverush">driverush</label>
             { command_list(enemy) }
           </div>
         </div>
       </HBox>
       { summaryHeader() }
       <div>
-        { matchingTable.map((matching, idx) => {
-          const targetArts = Object.keys(matching)[0]
+        { matchingTable.map((matching) => {
+          const targetArtsKey = Object.keys(matching)[0]
+          const targetArtsName = Object.values(matching)[0].eName
           const targetArtsFrame = Object.values(matching)[0].eGuard
           const counters = Object.values(matching)[0].counters
+          const eKey = Object.values(matching)[0].eKey
           return (
-            <details key={targetArts}>
-              <summary>
-                <span style={ { minWidth: "40px", display: "inline-block" } }>[{targetArtsFrame}]</span>
-                <span>{ targetArts }</span>
+            <details key={targetArtsKey}>
+              <summary style={ { display: 'flex', justifyContent: "space-between"} }>
+                <div>
+                  <span style={ { minWidth: "40px", display: "inline-block" } }>[{targetArtsFrame}]</span>
+                  <span>{ targetArtsKey }</span>
+                </div>
+                <div style={ { minWidth: "20%" } }>
+                  <button onClick={ () => setDetailModal({artsName: targetArtsName, char: eKey }) }>詳細</button>
+                </div>
               </summary>
               { counters.map((counter, num) => {
                 return (
@@ -209,8 +270,11 @@ export const App = () => {
                       <span>コマンド：</span>
                       <span>{ counter.sCommand }</span>
                     </div>
+                    <div style={ { minWidth: "20%" } }>
+                      <button onClick={ () => setDetailModal({artsName: counter.sName, char: counter.sKey }) }>詳細</button>
+                    </div>
                   </div>
-                )
+              )
               })}
             </details>
           )
