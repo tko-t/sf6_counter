@@ -258,6 +258,9 @@ export const App = () => {
           const counters = Object.values(matching)[0].counters
           const eKey = Object.values(matching)[0].eKey
           const imageFile = `/images/${eKey}/${Object.values(matching)[0].imageFile}`
+          const enemyBtnStyle = Object.values(matching)[0].imageFile
+            ? { backgroundImage: `url("${imageFile}")`, backgroundRepeat: 'no-repeat', backgroundSize: 'cover', backgroundPosition: 'center'}
+            : {}
 
           return (
             <details key={targetArtsKey}>
@@ -268,12 +271,15 @@ export const App = () => {
                 </div>
                 <div>
                   <button
-                    style={ { backgroundImage: `url("${imageFile}")`, backgroundRepeat: 'no-repeat', backgroundSize: 'cover', backgroundPosition: 'center', width: "70px", height: '56px'} }
-                    onClick={ () => setDetailModal({artsName: targetArtsName, char: eKey }) }>詳細</button>
+                    style={ enemyBtnStyle }
+                    onClick={ () => setDetailModal({artsName: targetArtsName, char: eKey }) }> </button>
                 </div>
               </summary>
               { counters.map((counter, num) => {
                 const counterImage = `/images/${counter.sKey}/${counter.sImageFile}`
+                const counterBtnStyle = counter.sImageFile
+                  ? { backgroundImage: `url("${counterImage}")`, backgroundRepeat: 'no-repeat', backgroundSize: 'cover', backgroundPosition: 'center' }
+                  : { }
                 return (
                   <div key={Math.random()} style={ { display: 'flex', justifyContent: "space-between", padding: "8px"} } className={`detail_item counter_${ num % 2 == 0 ? "a" : "b"}`}>
                     <div>
@@ -282,8 +288,8 @@ export const App = () => {
                     </div>
                     <div>
                       <button
-                        style={ { backgroundImage: `url("${counterImage}")`, backgroundRepeat: 'no-repeat', backgroundSize: 'cover', backgroundPosition: 'center', width: "70px", height: '56px'} }
-                        onClick={ () => setDetailModal({artsName: counter.sName, char: counter.sKey }) }>詳細</button>
+                        style={ counterBtnStyle }
+                        onClick={ () => setDetailModal({artsName: counter.sName, char: counter.sKey }) }> </button>
                     </div>
                   </div>
               )

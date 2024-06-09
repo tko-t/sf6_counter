@@ -99,3 +99,14 @@ table.detail-arts {
   height: 100%;
   width: 100%;
 }
+
+button {
+  border: 1px solid #555;
+  width:  70px;
+  height: 56px;
+  background-color: #ffffff;
+  opacity: 1.0;
+  background-image:  repeating-linear-gradient(45deg, #f6f6f6 25%, transparent 25%, transparent 75%, #f6f6f6 75%, #f6f6f6), repeating-linear-gradient(45deg, #f6f6f6 25%, #ffffff 25%, #ffffff 75%, #f6f6f6 75%, #f6f6f6);
+  background-position: 0 0, 8px 8px;
+  background-size: 16px 16px;  
+}
