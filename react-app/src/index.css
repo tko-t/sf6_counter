@@ -85,8 +85,6 @@ table.detail-arts {
   background-color: #cccccc;
   margin: 30% auto;
   min-width: 55%;
-  max-width: 99%;
-  width: fit-content;
   background-size: cover;
   background-repeat: no-repeat;
 }
