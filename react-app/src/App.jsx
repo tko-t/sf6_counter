@@ -186,9 +186,13 @@ export const App = () => {
 
     const char = currentArts.key
     const imageFile = `/images/${char}/${currentArts.imageFile}`
-
+    const movieFile = `/movies/${char}/${currentArts.movieFile}`
+    // style={{ backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)), url("${imageFile}")` } }
     return (
-      <div className="modal" style={{ backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)), url("${imageFile}")` } }>
+      <div className="modal">
+        <video poster={imageFile} muted autoPlay loop className='arts-video'>
+          <source src={movieFile} type="video/mp4" />
+        </video>
         <table className="detail-arts">
           <tbody>
             <tr><td className="detail-arts-header">技名: </td><td className="detail-arts-body">{currentArts?.name}</td></tr>

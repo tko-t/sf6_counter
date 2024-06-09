@@ -88,4 +88,14 @@ table.detail-arts {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  overflow: hidden;
+  position: relative;
+}
+
+.arts-video {
+  position: absolute;
+  opacity: 0.3;
+  object-fit: cover;
+  height: 100%;
+  width: 100%;
 }
