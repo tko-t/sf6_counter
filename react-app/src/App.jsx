@@ -86,7 +86,7 @@ export const App = () => {
     setMatchingTable(frameTableByEnemy().map(enemyRow => {
       const counter = {}
       frameTableBySelf().map(selfRow => {
-        const exFrame  = isAffectedDriveRush(enemyRow.skill_type, enemyRow.name) ?
+        const exFrame  = isAffectedDriveRush(enemyRow.skillType, enemyRow.name) ?
           burnOut + driverush
           :
           burnOut;
@@ -99,9 +99,11 @@ export const App = () => {
         const command  = selfRow.command;                    // 自分コマンド
         const counterKey = `${enemyRow.name} ： ${eCommand}`; // 技名とコマンドでユニーク化
         const eKey     = enemyRow.key;                        // 敵英語名
-        if(-eGuard >= fire) {
+        const imageFile = enemyRow.imageFile
+        // 極端にデカい硬直の返しは教えてくれんでいい
+        if(-20 < eGuard && -eGuard >= fire) {
           counter[counterKey] ||= {
-            counters: [], eGuard, eName, eKey
+            counters: [], eGuard, eName, eKey, imageFile
           }
 
           counter[counterKey]['counters'].push({
@@ -110,6 +112,7 @@ export const App = () => {
             sFire: fire,
             sDamage: damage,
             sCommand: command,
+            sImageFile: selfRow.imageFile,
           })
         }
       })
@@ -130,10 +133,11 @@ export const App = () => {
           </summary>
           <div className="detail_item coutions">
             <small>敵の不利フレームより速い発生技一覧</small>
-            <small>ガード後の距離やリーチは考慮してないです</small>
+            <small>ガード後の距離、リーチの考慮なし</small>
             <small>burnoutはガード硬直4F増し</small>
             <small>driverushはガード硬直2F増し(通常、特殊技）</small>
             <small>[...]は不利フレーム</small>
+            <small>20F以上の硬直は除外（見ればわかる）</small>
             <small>202405 Ver.</small>
           </div>
         </details>
@@ -157,7 +161,7 @@ export const App = () => {
     }
   }
 
-  const command_list = (key) => {
+  const commandList = (key) => {
     if (!mySelf) return;
     if (!enemy) return;
     return (
@@ -180,27 +184,30 @@ export const App = () => {
   const detailArts = () => {
     if (!currentArts) return;
 
+    const char = currentArts.key
+    const imageFile = `/images/${char}/${currentArts.imageFile}`
+
     return (
-      <div style={{ backgroundColor: "#fff", margin:"30% auto", minWidth: "55%", maxWidth: "99%", width: "fit-content"}}>
+      <div className="modal" style={{ backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)), url("${imageFile}")` } }>
         <table className="detail-arts">
           <tbody>
-            <tr><td className="detail-arts-header">技名</td><td className="detail-arts-body">{currentArts?.name}</td></tr>
-            <tr><td className="detail-arts-header">発生</td><td className="detail-arts-body">{currentArts?.fire}</td></tr>
-            <tr><td className="detail-arts-header">持続</td><td className="detail-arts-body">{currentArts?.fire}-{currentArts?.persistence}</td></tr>
-            <tr><td className="detail-arts-header">硬直</td><td className="detail-arts-body">{currentArts?.rigidity}</td></tr>
-            <tr><td className="detail-arts-header">全体フレーム</td><td className="detail-arts-body">{currentArts?.total_frame}</td></tr>
-            <tr><td className="detail-arts-header">硬直差[hit]</td><td className="detail-arts-body">{currentArts?.hit}</td></tr>
-            <tr><td className="detail-arts-header">硬直差[guard]</td><td className="detail-arts-body">{currentArts?.guard}</td></tr>
-            <tr><td className="detail-arts-header">キャンセル</td><td className="detail-arts-body">{currentArts?.cancel}</td></tr>
-            <tr><td className="detail-arts-header">ダメージ</td><td className="detail-arts-body">{currentArts?.damage}</td></tr>
-            <tr><td className="detail-arts-header">コンボ補正</td><td className="detail-arts-body">{currentArts?.correction}</td></tr>
-            <tr><td className="detail-arts-header">Dゲージ[hit]</td><td className="detail-arts-body">{currentArts?.d_hit}</td></tr>
-            <tr><td className="detail-arts-header">Dケージ[guard]</td><td className="detail-arts-body">{currentArts?.d_guard}</td></tr>
-            <tr><td className="detail-arts-header">Dゲージ[punish]</td><td className="detail-arts-body">{currentArts?.d_punish}</td></tr>
-            <tr><td className="detail-arts-header">SAゲージ</td><td className="detail-arts-body">{currentArts?.sa_gauge}</td></tr>
-            <tr><td className="detail-arts-header">属性</td><td className="detail-arts-body">{currentArts?.attack_type}</td></tr>
-            <tr><td className="detail-arts-header">備考</td><td className="detail-arts-body">
-              { currentArts.skill_type }<br></br>
+            <tr><td className="detail-arts-header">技名: </td><td className="detail-arts-body">{currentArts?.name}</td></tr>
+            <tr><td className="detail-arts-header">発生: </td><td className="detail-arts-body">{currentArts?.fire}</td></tr>
+            <tr><td className="detail-arts-header">持続: </td><td className="detail-arts-body">{currentArts?.fire}-{currentArts?.persistence}</td></tr>
+            <tr><td className="detail-arts-header">硬直: </td><td className="detail-arts-body">{currentArts?.rigidity}</td></tr>
+            <tr><td className="detail-arts-header">全体: </td><td className="detail-arts-body">{currentArts?.totalFrame}</td></tr>
+            <tr><td className="detail-arts-header">硬直差[H]: </td><td className="detail-arts-body">{currentArts?.hit}</td></tr>
+            <tr><td className="detail-arts-header">硬直差[G]: </td><td className="detail-arts-body">{currentArts?.guard}</td></tr>
+            <tr><td className="detail-arts-header">キャンセル: </td><td className="detail-arts-body">{currentArts?.cancel}</td></tr>
+            <tr><td className="detail-arts-header">ダメージ: </td><td className="detail-arts-body">{currentArts?.damage}</td></tr>
+            <tr><td className="detail-arts-header">Dゲージ[H]: </td><td className="detail-arts-body">{currentArts?.dHit}</td></tr>
+            <tr><td className="detail-arts-header">Dケージ[G]: </td><td className="detail-arts-body">{currentArts?.dGuard}</td></tr>
+            <tr><td className="detail-arts-header">Dゲージ[P]: </td><td className="detail-arts-body">{currentArts?.dPunish}</td></tr>
+            <tr><td className="detail-arts-header">SAゲージ: </td><td className="detail-arts-body">{currentArts?.saGauge}</td></tr>
+            <tr><td className="detail-arts-header">属性: </td><td className="detail-arts-body">{currentArts?.attackType}</td></tr>
+            <tr><td className="detail-arts-header">補正: </td><td className="detail-arts-body">{currentArts?.correction}</td></tr>
+            <tr><td className="detail-arts-header">備考: </td><td className="detail-arts-body">
+              { currentArts.skillType }<br></br>
               { currentArts.comment.split("@@EOL@@").map( (comment, idx) => (
                   <p className="comment-line" key={idx}>
                     { comment }
@@ -209,6 +216,7 @@ export const App = () => {
             </td></tr>
           </tbody>
         </table>
+        <small style={{ margin: "10px"}}>※ H: ヒット、G: ガード、P: パニカン</small>
       </div>
     )
   }
@@ -224,7 +232,7 @@ export const App = () => {
           <div style={ { marginLeft: "10px", padding: "4px 8px 8px 0"} }>
             <input id="burnout" type="checkbox" onChange={ (e) => onBurnout(e) }/>
             <label htmlFor="burnout">burnout</label>
-            { command_list(mySelf) }
+            { commandList(mySelf) }
           </div>
         </div>
         <div><span>VS</span></div>
@@ -233,7 +241,7 @@ export const App = () => {
           <div style={ { marginLeft: "10px", padding: "4px 8px 8px 0"} }>
             <input id="driverush" type="checkbox" onChange={ (e) => onDriverush(e) }/>
             <label htmlFor="driverush">driverush</label>
-            { command_list(enemy) }
+            { commandList(enemy) }
           </div>
         </div>
       </HBox>
@@ -245,6 +253,8 @@ export const App = () => {
           const targetArtsFrame = Object.values(matching)[0].eGuard
           const counters = Object.values(matching)[0].counters
           const eKey = Object.values(matching)[0].eKey
+          const imageFile = `/images/${eKey}/${Object.values(matching)[0].imageFile}`
+
           return (
             <details key={targetArtsKey}>
               <summary style={ { display: 'flex', justifyContent: "space-between"} }>
@@ -252,26 +262,24 @@ export const App = () => {
                   <span style={ { minWidth: "40px", display: "inline-block" } }>[{targetArtsFrame}]</span>
                   <span>{ targetArtsKey }</span>
                 </div>
-                <div style={ { minWidth: "20%" } }>
-                  <button onClick={ () => setDetailModal({artsName: targetArtsName, char: eKey }) }>詳細</button>
+                <div>
+                  <button
+                    style={ { backgroundImage: `url("${imageFile}")`, backgroundRepeat: 'no-repeat', backgroundSize: 'cover', backgroundPosition: 'center', width: "70px", height: '56px'} }
+                    onClick={ () => setDetailModal({artsName: targetArtsName, char: eKey }) }>詳細</button>
                 </div>
               </summary>
               { counters.map((counter, num) => {
+                const counterImage = `/images/${counter.sKey}/${counter.sImageFile}`
                 return (
-                  <div key={Math.random()}  className={`detail_item counter_${ num % 2 == 0 ? "a" : "b"}`}>
+                  <div key={Math.random()} style={ { display: 'flex', justifyContent: "space-between", padding: "8px"} } className={`detail_item counter_${ num % 2 == 0 ? "a" : "b"}`}>
                     <div>
-                      <span>{ counter.sName }</span>
+                      <span style={ { minWidth: "40px", display: "inline-block" } }>[{counter.sFire}]</span>
+                      <span>{ counter.sName }：{ counter.sCommand }</span>
                     </div>
                     <div>
-                      <span>発生：</span>
-                      <span>{ counter.sFire }</span>
-                    </div>
-                    <div>
-                      <span>コマンド：</span>
-                      <span>{ counter.sCommand }</span>
-                    </div>
-                    <div style={ { minWidth: "20%" } }>
-                      <button onClick={ () => setDetailModal({artsName: counter.sName, char: counter.sKey }) }>詳細</button>
+                      <button
+                        style={ { backgroundImage: `url("${counterImage}")`, backgroundRepeat: 'no-repeat', backgroundSize: 'cover', backgroundPosition: 'center', width: "70px", height: '56px'} }
+                        onClick={ () => setDetailModal({artsName: counter.sName, char: counter.sKey }) }>詳細</button>
                     </div>
                   </div>
               )

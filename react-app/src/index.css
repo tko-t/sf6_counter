@@ -63,7 +63,7 @@ small {
 }
 
 table.detail-arts {
-  margin: 10px auto;
+  margin: 10px;
   font-size: 12px;
 }
 .detail-arts-header {
@@ -79,4 +79,14 @@ table.detail-arts {
 
 .comment-line {
   margin: 0;
+}
+
+.modal {
+  background-color: #cccccc;
+  margin: 30% auto;
+  min-width: 55%;
+  max-width: 99%;
+  width: fit-content;
+  background-size: cover;
+  background-repeat: no-repeat;
 }
