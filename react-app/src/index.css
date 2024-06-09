@@ -86,5 +86,6 @@ table.detail-arts {
   margin: 30% auto;
   min-width: 55%;
   background-size: cover;
+  background-position: center;
   background-repeat: no-repeat;
 }
