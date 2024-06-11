@@ -23,7 +23,7 @@ export const App = () => {
     CsvReader(SF6FrameData, setSf6FrameData)
   }, []);
 
-  // キャラ表作成
+  // ロードしたらキャラ表作成
   useEffect(() => {
     if (!sf6FrameData) return;
 
@@ -31,11 +31,13 @@ export const App = () => {
     sf6FrameData.map(row => {
       uniqueCharacterList[row.key] = row.char
     });
+
     setCharacterList(Object.keys(uniqueCharacterList).map( key => {
       return { value: key, label: uniqueCharacterList[key] }
     }));
   }, [sf6FrameData]);
 
+  // キャラ表できたらcookieからセット
   useEffect(() => {
     if (cookies.mySelfValue) {
       setMySelf(cookies.mySelfValue);
@@ -44,7 +46,51 @@ export const App = () => {
     if (cookies.enemyValue) {
       setEnemy(cookies.enemyValue);
     }
+
+    setBurnOut(cookies.burnOut || 0)
+    setDriverush(cookies.driverush || 0)
+    setDisableFilter(cookies.disableFilter == true)
   }, [characterList])
+
+  useEffect(() => {
+    console.log(burnOut, driverush, disableFilter)
+    setCookie("burnOut", burnOut)
+    setCookie("driverush", driverush)
+    setCookie("disableFilter", disableFilter)
+  }, [burnOut, driverush, disableFilter])
+
+  // キャラ選択したらCookieにセット
+  useEffect(() => {
+    if (!characterList) return;
+
+    if (mySelf) {
+      setCookie("mySelfValue", mySelf)
+      setCookie("mySelfLabel", characterList.find( elm => { if(elm.value === mySelf) return elm })?.label)
+    }
+
+    if (enemy) {
+      setCookie("enemyValue", enemy)
+      setCookie("enemyLabel", characterList.find( elm => { if(elm.value === enemy) return elm })?.label)
+    }
+  }, [mySelf, enemy])
+
+  // 自分のキャラ選択
+  // 敵のキャラ選択
+  // バーンアウト
+  // ドライブラッシュ
+  // all
+  useEffect(() => {
+
+    console.log("match?")
+    if (!mySelf) return;
+    if (!enemy) return;
+    if (!characterList) return;
+    if (!sf6FrameData) return;
+
+    match()
+
+  }, [mySelf, enemy, burnOut, driverush, disableFilter, characterList, sf6FrameData]);
+
 
   // "発生", "ダメージ", "ガード硬直" があって
   // 事前動作の不要な攻撃リスト
@@ -74,36 +120,6 @@ export const App = () => {
     return frameTableForEnemy[enemy];
   };
 
-  // キャラ選択したらCookieにセット
-  useEffect(() => {
-    if (!characterList) return;
-
-    if (mySelf) {
-      setCookie("mySelfValue", mySelf)
-      setCookie("mySelfLabel", characterList.find( elm => { if(elm.value === mySelf) return elm })?.label)
-    }
-
-    if (enemy) {
-      setCookie("enemyValue", enemy)
-      setCookie("enemyLabel", characterList.find( elm => { if(elm.value === enemy) return elm })?.label)
-    }
-  }, [mySelf, enemy])
-
-  // 自分のキャラ選択
-  // 敵のキャラ選択
-  // バーンアウト
-  // ドライブラッシュ
-  useEffect(() => {
-    if (!mySelf) return;
-    if (!enemy) return;
-    if (!characterList) return;
-    if (!sf6FrameData) return;
-
-    console.log("match(9")
-
-    match()
-
-  }, [mySelf, enemy, burnOut, driverush, disableFilter, characterList, sf6FrameData]);
 
   // 敵の行動のガード硬直より少ないフレームで発生できる技をフィルタ
   // {
@@ -284,7 +300,7 @@ export const App = () => {
         <div style={ { width: "100%" } }>
           <CharaSelecter placeholder="あなた" list={characterList} onChange={setMySelf} defaultValue={cookies.mySelfLabel || ""}/>
           <div style={ { marginLeft: "10px", padding: "4px 8px 8px 0"} }>
-            <input id="burnout" type="checkbox" onChange={ (e) => onBurnout(e) }/>
+            <input id="burnout" type="checkbox" checked={ burnOut !== 0 } onChange={ (e) => onBurnout(e) }/>
             <label htmlFor="burnout">burnout</label>
             { commandList(mySelf) }
           </div>
@@ -293,9 +309,9 @@ export const App = () => {
         <div style={ { width: "100%" } }>
           <CharaSelecter placeholder="敵" list={characterList} onChange={setEnemy} defaultValue={cookies.enemyLabel || ""} />
           <div style={ { marginLeft: "10px", padding: "4px 8px 8px 0"} }>
-            <input id="driverush" type="checkbox" onChange={ (e) => onDriverush(e) }/>
+            <input id="driverush" type="checkbox" checked={ driverush !== 0 } onChange={ (e) => onDriverush(e) }/>
             <label htmlFor="driverush">driverush</label>
-            <input id="all" type="checkbox" onChange={ (e) => setDisableFilter(e.target.checked) } style={ { marginLeft: "20px" } } />
+            <input id="all" type="checkbox" checked={ disableFilter } onChange={ (e) => setDisableFilter(e.target.checked) } style={ { marginLeft: "20px" } } />
             <label htmlFor="all">all</label>
             { commandList(enemy) }
           </div>
