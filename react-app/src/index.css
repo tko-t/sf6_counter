@@ -13,6 +13,10 @@ code {
     monospace;
 }
 
+.danger {
+  color: #ca0000;
+}
+
 details {
   border-bottom: 1px solid #999;
   border-left: 1px solid #999;
@@ -42,8 +46,13 @@ small {
 }
 
 .coutions {
-  display: flex;
-  flex-direction: column;
+  margin: 0px auto;
+  width: fit-content;
+}
+
+.coutions > ul {
+  margin-top: 0px;
+  text-align: left;
 }
 
 .link-block {

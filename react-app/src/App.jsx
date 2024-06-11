@@ -153,8 +153,9 @@ export const App = () => {
       const counterKey = `${enemyRow.name} ： ${eCommand}`;  // 技名とコマンドでユニーク化
       const eKey       = enemyRow.key;                       // 敵英語名
       const imageFile  = enemyRow.imageFile
+      const danger     = 0 < eGuard;
       counter[counterKey] ||= {
-        counters: [], eGuard, eName, eKey, imageFile, eObjectKey
+        counters: [], eGuard, eName, eKey, imageFile, eObjectKey, danger
       }
 
       frameTableBySelf().map((selfRow, idx) => {
@@ -188,20 +189,28 @@ export const App = () => {
   const summaryHeader = () => {
     if (matchingTable.length == 0) return;
 
+    const subject = disableFilter
+      ? "FRAME DATA"
+      : "確定反撃持ってる表"
+
     return (
       <div style={ { textAlign: 'center', width: "100%" } }>
         <details className="introduction">
           <summary>
-            <span>ガード後に殴り返せるかもリスト</span>
+            <span>{subject}</span>
           </summary>
           <div className="detail_item coutions">
-            <small>敵の不利フレームより速い発生技一覧</small>
-            <small>ガード後の距離、リーチの考慮なし</small>
-            <small>burnoutはガード硬直4F増し</small>
-            <small>driverushはガード硬直2F増し(通常、特殊技）</small>
-            <small>[...]は不利フレーム</small>
-            <small>20F以上の硬直は除外（見ればわかる）</small>
-            <small>202405 Ver.</small>
+            <ul>
+              <li><small>タップで不利フレームより速い発生技を一覧</small></li>
+              <li><small>距離やリーチは考慮しない</small></li>
+              <li><small>敵の[]は不利フレーム数</small></li>
+              <li><small style={ { color: "#ca0000" } }>赤文字</small><small>はガードで有利とられる</small></li>
+              <li><small>自分の[]は発生フレーム数</small></li>
+              <li><small>✅️ burnout ... ガード硬直4F増し</small></li>
+              <li><small>✅️ driverush ... ガード硬直2F増し(通常、特殊技)</small></li>
+              <li><small>✅️ all ... 反確がないものも表示</small></li>
+              <li><small>202405 Ver.</small></li>
+            </ul>
           </div>
         </details>
       </div>
@@ -307,7 +316,7 @@ export const App = () => {
       </Modal>
       <HBox>
         <div style={ { width: "100%" } }>
-          <CharaSelecter placeholder="あなた" list={characterList} onChange={setMySelf} value={ mySelf }/>
+          <CharaSelecter placeholder="反撃側" list={characterList} onChange={setMySelf} value={ mySelf }/>
           <div className="checkBoxBox">
             <input id="burnout" type="checkbox" checked={ burnOut !== 0 } onChange={ (e) => onBurnout(e) }/>
             <label htmlFor="burnout">burnout</label>
@@ -316,7 +325,7 @@ export const App = () => {
         </div>
         <div><span onClick={ () => reverseCharacter() }>VS</span></div>
         <div style={ { width: "100%" } }>
-          <CharaSelecter placeholder="敵" list={characterList} onChange={setEnemy} value={ enemy }/>
+          <CharaSelecter placeholder="先手側" list={characterList} onChange={setEnemy} value={ enemy }/>
           <div className="checkBoxBox">
             <input id="driverush" type="checkbox" checked={ driverush !== 0 } onChange={ (e) => onDriverush(e) }/>
             <label htmlFor="driverush">driverush</label>
@@ -343,11 +352,13 @@ export const App = () => {
             ? "active-row"
             : "un-active-row"
 
+          const artsTextStyle = { minWidth: "40px", display: "inline-block" }
+
           return (
             <details key={targetArtsKey}>
               <summary className={rowClass}>
-                <div>
-                  <span style={ { minWidth: "40px", display: "inline-block" } }>[{targetArtsFrame}]</span>
+                <div className={ Object.values(matching)[0].danger ? "danger" : null }>
+                  <span style={ artsTextStyle }>[{targetArtsFrame}]</span>
                   <span>{ targetArtsName }</span>
                 </div>
                 <div>
@@ -364,8 +375,8 @@ export const App = () => {
                   return (
                     <div key={counter.sObjectKey} style={ { display: 'flex', justifyContent: "space-between", padding: "8px"} } className={`detail_item counter_${ num % 2 == 0 ? "a" : "b"}`}>
                       <div>
-                        <span style={ { minWidth: "40px", display: "inline-block" } }>[{counter.sFire}]</span>
-                        <span>{ counter.sName }：{ counter.sCommand }</span>
+                        <span style={ artsTextStyle }>[{counter.sFire}]</span>
+                        <span>{ counter.sName }</span>
                       </div>
                       <div>
                         <button
