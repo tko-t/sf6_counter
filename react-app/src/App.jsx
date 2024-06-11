@@ -291,6 +291,15 @@ export const App = () => {
     )
   }
 
+  // VS押したらキャラ入れ替え
+  const reverseCharacter = () => {
+    const nextMySelf = enemy
+    const nextEnemy  = mySelf
+
+    setMySelf(nextMySelf)
+    setEnemy(nextEnemy)
+  }
+
   return (
     <div>
       <Modal showModal={showModal} setShowModal={setShowModal}>
@@ -298,17 +307,17 @@ export const App = () => {
       </Modal>
       <HBox>
         <div style={ { width: "100%" } }>
-          <CharaSelecter placeholder="あなた" list={characterList} onChange={setMySelf} defaultValue={cookies.mySelfLabel || ""}/>
-          <div style={ { marginLeft: "10px", padding: "4px 8px 8px 0"} }>
+          <CharaSelecter placeholder="あなた" list={characterList} onChange={setMySelf} value={ mySelf }/>
+          <div className="checkBoxBox">
             <input id="burnout" type="checkbox" checked={ burnOut !== 0 } onChange={ (e) => onBurnout(e) }/>
             <label htmlFor="burnout">burnout</label>
             { commandList(mySelf) }
           </div>
         </div>
-        <div><span>VS</span></div>
+        <div><span onClick={ () => reverseCharacter() }>VS</span></div>
         <div style={ { width: "100%" } }>
-          <CharaSelecter placeholder="敵" list={characterList} onChange={setEnemy} defaultValue={cookies.enemyLabel || ""} />
-          <div style={ { marginLeft: "10px", padding: "4px 8px 8px 0"} }>
+          <CharaSelecter placeholder="敵" list={characterList} onChange={setEnemy} value={ enemy }/>
+          <div className="checkBoxBox">
             <input id="driverush" type="checkbox" checked={ driverush !== 0 } onChange={ (e) => onDriverush(e) }/>
             <label htmlFor="driverush">driverush</label>
             <input id="all" type="checkbox" checked={ disableFilter } onChange={ (e) => setDisableFilter(e.target.checked) } style={ { marginLeft: "20px" } } />
