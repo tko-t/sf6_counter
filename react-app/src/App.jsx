@@ -7,8 +7,8 @@ import { Modal } from './components/Modal';
 import { useCookies } from 'react-cookie';
 
 export const App = () => {
-  const [sf6FrameData, setSf6FrameData] = useState([]);
-  const [characterList, setCharacterList] = useState([]);
+  const [sf6FrameData, setSf6FrameData] = useState();
+  const [characterList, setCharacterList] = useState();
   const [mySelf, setMySelf] = useState(null);
   const [enemy, setEnemy]   = useState(null);
   const [burnOut, setBurnOut] = useState(0);
@@ -25,6 +25,8 @@ export const App = () => {
 
   // キャラ表作成
   useEffect(() => {
+    if (!sf6FrameData) return;
+
     const uniqueCharacterList = {};
     sf6FrameData.map(row => {
       uniqueCharacterList[row.key] = row.char
@@ -32,16 +34,24 @@ export const App = () => {
     setCharacterList(Object.keys(uniqueCharacterList).map( key => {
       return { value: key, label: uniqueCharacterList[key] }
     }));
-
-    if (mySelf, enemy) {
-      match()
-    }
   }, [sf6FrameData]);
+
+  useEffect(() => {
+    if (cookies.mySelfValue) {
+      setMySelf(cookies.mySelfValue);
+    }
+
+    if (cookies.enemyValue) {
+      setEnemy(cookies.enemyValue);
+    }
+  }, [characterList])
 
   // "発生", "ダメージ", "ガード硬直" があって
   // 事前動作の不要な攻撃リスト
   const frameTableForSelf = {};
   const frameTableBySelf = () => {
+    if (!sf6FrameData) return;
+
     if (!frameTableForSelf[mySelf]) {
       const reg = /.*(中に|後に|時に|段目).*/
       frameTableForSelf[mySelf] = sf6FrameData.filter((row) => {
@@ -54,6 +64,8 @@ export const App = () => {
   // "ガード硬直" がある攻撃リスト
   const frameTableForEnemy = {};
   const frameTableByEnemy = () => {
+    if (!sf6FrameData) return;
+
     if (!frameTableForEnemy[enemy]) {
       frameTableForEnemy[enemy] = sf6FrameData.filter((row) => {
         return row.key == enemy && row.guard
@@ -64,6 +76,8 @@ export const App = () => {
 
   // キャラ選択したらCookieにセット
   useEffect(() => {
+    if (!characterList) return;
+
     if (mySelf) {
       setCookie("mySelfValue", mySelf)
       setCookie("mySelfLabel", characterList.find( elm => { if(elm.value === mySelf) return elm })?.label)
@@ -75,17 +89,6 @@ export const App = () => {
     }
   }, [mySelf, enemy])
 
-  // クッキーに値があったら選択したキャラとする
-  // ※selectのデフォルト値とは別
-  useEffect(() => {
-    if (cookies.mySelfValue) {
-      setMySelf(cookies.mySelfValue);
-    }
-    if (cookies.enemyValue) {
-      setEnemy(cookies.enemyValue);
-    }
-  }, []);
-
   // 自分のキャラ選択
   // 敵のキャラ選択
   // バーンアウト
@@ -93,12 +96,14 @@ export const App = () => {
   useEffect(() => {
     if (!mySelf) return;
     if (!enemy) return;
+    if (!characterList) return;
+    if (!sf6FrameData) return;
 
     console.log("match(9")
 
     match()
 
-  }, [mySelf, enemy, burnOut, driverush, disableFilter]);
+  }, [mySelf, enemy, burnOut, driverush, disableFilter, characterList, sf6FrameData]);
 
   // 敵の行動のガード硬直より少ないフレームで発生できる技をフィルタ
   // {
@@ -117,6 +122,8 @@ export const App = () => {
   }
 
   const match = () => {
+    if (!sf6FrameData) return;
+
     setMatchingTable(frameTableByEnemy().map((enemyRow, eObjectKey) => {
       const counter = {}
       const exFrame  = isAffectedDriveRush(enemyRow.skillType, enemyRow.name) ?
@@ -213,6 +220,8 @@ export const App = () => {
 
   const [currentArts, setCurrentArts] = useState(null);
   const setDetailModal = ({artsName, char}) => {
+    if (!sf6FrameData) return;
+
     const arts = sf6FrameData.filter((row) => {
       return row.key == char && row.name == artsName
     })[0]
@@ -273,7 +282,7 @@ export const App = () => {
       </Modal>
       <HBox>
         <div style={ { width: "100%" } }>
-          <CharaSelecter placeholder="あなた" list={characterList} onChange={setMySelf} defaultValue={cookies.mySelfLabel}/>
+          <CharaSelecter placeholder="あなた" list={characterList} onChange={setMySelf} defaultValue={cookies.mySelfLabel || ""}/>
           <div style={ { marginLeft: "10px", padding: "4px 8px 8px 0"} }>
             <input id="burnout" type="checkbox" onChange={ (e) => onBurnout(e) }/>
             <label htmlFor="burnout">burnout</label>
@@ -282,7 +291,7 @@ export const App = () => {
         </div>
         <div><span>VS</span></div>
         <div style={ { width: "100%" } }>
-          <CharaSelecter placeholder="敵" list={characterList} onChange={setEnemy} defaultValue={cookies.enemyLabel} />
+          <CharaSelecter placeholder="敵" list={characterList} onChange={setEnemy} defaultValue={cookies.enemyLabel || ""} />
           <div style={ { marginLeft: "10px", padding: "4px 8px 8px 0"} }>
             <input id="driverush" type="checkbox" onChange={ (e) => onDriverush(e) }/>
             <label htmlFor="driverush">driverush</label>
