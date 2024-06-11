@@ -12,6 +12,7 @@ export const App = () => {
   const [enemy, setEnemy]   = useState(null);
   const [burnOut, setBurnOut] = useState(0);
   const [driverush, setDriverush] = useState(0);
+  const [disableFilter, setDisableFilter] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
   // csvロード
@@ -64,7 +65,7 @@ export const App = () => {
 
     match()
 
-  }, [enemy, mySelf, burnOut, driverush]);
+  }, [enemy, mySelf, burnOut, driverush, disableFilter]);
 
   // 敵の行動のガード硬直より少ないフレームで発生できる技をフィルタ
   // {
@@ -83,40 +84,46 @@ export const App = () => {
   }
 
   const match = () => {
-    setMatchingTable(frameTableByEnemy().map(enemyRow => {
+    setMatchingTable(frameTableByEnemy().map((enemyRow, eObjectKey) => {
       const counter = {}
-      frameTableBySelf().map(selfRow => {
-        const exFrame  = isAffectedDriveRush(enemyRow.skillType, enemyRow.name) ?
-          burnOut + driverush
-          :
-          burnOut;
-        // バーンアウト中は殴られ硬直が4フレーム長くなる
-        const eGuard   = parseInt(enemyRow.guard) + exFrame; // ガード硬直
-        const eName    = enemyRow.name;                      // 技名
-        const eCommand = enemyRow.command;                   // 敵方コマンド
+      const exFrame  = isAffectedDriveRush(enemyRow.skillType, enemyRow.name) ?
+        burnOut + driverush
+        :
+        burnOut;
+      // バーンアウト中は殴られ硬直が4フレーム長くなる
+      const eGuard     = parseInt(enemyRow.guard) + exFrame; // ガード硬直
+      const eName      = enemyRow.name;                      // 技名
+      const eCommand   = enemyRow.command;                   // 敵方コマンド
+      const counterKey = `${enemyRow.name} ： ${eCommand}`;  // 技名とコマンドでユニーク化
+      const eKey       = enemyRow.key;                       // 敵英語名
+      const imageFile  = enemyRow.imageFile
+      counter[counterKey] ||= {
+        counters: [], eGuard, eName, eKey, imageFile, eObjectKey
+      }
+
+      frameTableBySelf().map((selfRow, idx) => {
         const fire     = parseInt(selfRow.fire);             // 発生
         const damage   = selfRow.damage;                     // ダメージ
         const command  = selfRow.command;                    // 自分コマンド
-        const counterKey = `${enemyRow.name} ： ${eCommand}`; // 技名とコマンドでユニーク化
-        const eKey     = enemyRow.key;                        // 敵英語名
-        const imageFile = enemyRow.imageFile
-        // 極端にデカい硬直の返しは教えてくれんでいい
-        if(-20 < eGuard && -eGuard >= fire) {
-          counter[counterKey] ||= {
-            counters: [], eGuard, eName, eKey, imageFile
-          }
+        const sObjectKey = `${String(eObjectKey)}-${String(idx)}`
 
-          counter[counterKey]['counters'].push({
+        if(-eGuard >= fire) {
+          counter[counterKey].counters.push({
             sKey:  selfRow.key,
             sName: selfRow.name,
             sFire: fire,
             sDamage: damage,
             sCommand: command,
             sImageFile: selfRow.imageFile,
+            sObjectKey,
           })
         }
       })
-      if (0 < Object.keys(counter).length) {
+      if (disableFilter) {
+        return counter;
+      }
+
+      if (0 < counter[counterKey].counters.length) {
         return counter
       }
     }).filter(v => v))
@@ -187,7 +194,7 @@ export const App = () => {
     const char = currentArts.key
     const imageFile = `/images/${char}/${currentArts.imageFile}`
     const movieFile = `/movies/${char}/${currentArts.movieFile}`
-    // style={{ backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)), url("${imageFile}")` } }
+
     return (
       <div className="modal">
         <video poster={imageFile} muted autoPlay loop className='arts-video'>
@@ -195,22 +202,23 @@ export const App = () => {
         </video>
         <table className="detail-arts">
           <tbody>
-            <tr><td className="detail-arts-header">技名: </td><td className="detail-arts-body">{currentArts?.name}</td></tr>
-            <tr><td className="detail-arts-header">発生: </td><td className="detail-arts-body">{currentArts?.fire}</td></tr>
-            <tr><td className="detail-arts-header">持続: </td><td className="detail-arts-body">{currentArts?.fire}-{currentArts?.persistence}</td></tr>
-            <tr><td className="detail-arts-header">硬直: </td><td className="detail-arts-body">{currentArts?.rigidity}</td></tr>
-            <tr><td className="detail-arts-header">全体: </td><td className="detail-arts-body">{currentArts?.totalFrame}</td></tr>
-            <tr><td className="detail-arts-header">硬直差[H]: </td><td className="detail-arts-body">{currentArts?.hit}</td></tr>
-            <tr><td className="detail-arts-header">硬直差[G]: </td><td className="detail-arts-body">{currentArts?.guard}</td></tr>
-            <tr><td className="detail-arts-header">キャンセル: </td><td className="detail-arts-body">{currentArts?.cancel}</td></tr>
-            <tr><td className="detail-arts-header">ダメージ: </td><td className="detail-arts-body">{currentArts?.damage}</td></tr>
-            <tr><td className="detail-arts-header">Dゲージ[H]: </td><td className="detail-arts-body">{currentArts?.dHit}</td></tr>
-            <tr><td className="detail-arts-header">Dケージ[G]: </td><td className="detail-arts-body">{currentArts?.dGuard}</td></tr>
-            <tr><td className="detail-arts-header">Dゲージ[P]: </td><td className="detail-arts-body">{currentArts?.dPunish}</td></tr>
-            <tr><td className="detail-arts-header">SAゲージ: </td><td className="detail-arts-body">{currentArts?.saGauge}</td></tr>
-            <tr><td className="detail-arts-header">属性: </td><td className="detail-arts-body">{currentArts?.attackType}</td></tr>
-            <tr><td className="detail-arts-header">補正: </td><td className="detail-arts-body">{currentArts?.correction}</td></tr>
-            <tr><td className="detail-arts-header">備考: </td><td className="detail-arts-body">
+            <tr><td className="detail-arts-header"></td><td className="detail-arts-body">{currentArts?.name}</td></tr>
+            <tr><td className="detail-arts-header">コマンド:</td><td className="detail-arts-body">{currentArts?.command}</td></tr>
+            <tr><td className="detail-arts-header">発生:</td><td className="detail-arts-body">{currentArts?.fire}</td></tr>
+            <tr><td className="detail-arts-header">持続:</td><td className="detail-arts-body">{currentArts?.fire}-{currentArts?.persistence}</td></tr>
+            <tr><td className="detail-arts-header">硬直:</td><td className="detail-arts-body">{currentArts?.rigidity}</td></tr>
+            <tr><td className="detail-arts-header">全体:</td><td className="detail-arts-body">{currentArts?.totalFrame}</td></tr>
+            <tr><td className="detail-arts-header">硬直差[H]:</td><td className="detail-arts-body">{currentArts?.hit}</td></tr>
+            <tr><td className="detail-arts-header">硬直差[G]:</td><td className="detail-arts-body">{currentArts?.guard}</td></tr>
+            <tr><td className="detail-arts-header">キャンセル:</td><td className="detail-arts-body">{currentArts?.cancel || '不可' }</td></tr>
+            <tr><td className="detail-arts-header">ダメージ:</td><td className="detail-arts-body">{currentArts?.damage}</td></tr>
+            <tr><td className="detail-arts-header">Dゲージ[H]:</td><td className="detail-arts-body">{currentArts?.dHit}</td></tr>
+            <tr><td className="detail-arts-header">Dケージ[G]:</td><td className="detail-arts-body">{currentArts?.dGuard}</td></tr>
+            <tr><td className="detail-arts-header">Dゲージ[P]:</td><td className="detail-arts-body">{currentArts?.dPunish}</td></tr>
+            <tr><td className="detail-arts-header">SAゲージ:</td><td className="detail-arts-body">{currentArts?.saGauge}</td></tr>
+            <tr><td className="detail-arts-header">属性:</td><td className="detail-arts-body">{currentArts?.attackType}</td></tr>
+            <tr><td className="detail-arts-header">補正:</td><td className="detail-arts-body">{currentArts?.correction}</td></tr>
+            <tr><td className="detail-arts-header">備考:</td><td className="detail-arts-body">
               { currentArts.skillType }<br></br>
               { currentArts.comment.split("@@EOL@@").map( (comment, idx) => (
                   <p className="comment-line" key={idx}>
@@ -245,6 +253,8 @@ export const App = () => {
           <div style={ { marginLeft: "10px", padding: "4px 8px 8px 0"} }>
             <input id="driverush" type="checkbox" onChange={ (e) => onDriverush(e) }/>
             <label htmlFor="driverush">driverush</label>
+            <input id="all" type="checkbox" onChange={ (e) => setDisableFilter(e.target.checked) } style={ { marginLeft: "20px" } } />
+            <label htmlFor="all">all</label>
             { commandList(enemy) }
           </div>
         </div>
@@ -252,7 +262,7 @@ export const App = () => {
       { summaryHeader() }
       <div>
         { matchingTable.map((matching) => {
-          const targetArtsKey = Object.keys(matching)[0]
+          const targetArtsKey = Object.values(matching)[0].eObjectKey
           const targetArtsName = Object.values(matching)[0].eName
           const targetArtsFrame = Object.values(matching)[0].eGuard
           const counters = Object.values(matching)[0].counters
@@ -262,12 +272,16 @@ export const App = () => {
             ? { backgroundImage: `url("${imageFile}")`, backgroundRepeat: 'no-repeat', backgroundSize: 'cover', backgroundPosition: 'center'}
             : {}
 
+          const rowClass = 0 < counters.length
+            ? "active-row"
+            : "un-active-row"
+
           return (
             <details key={targetArtsKey}>
-              <summary style={ { display: 'flex', justifyContent: "space-between"} }>
+              <summary className={rowClass}>
                 <div>
                   <span style={ { minWidth: "40px", display: "inline-block" } }>[{targetArtsFrame}]</span>
-                  <span>{ targetArtsKey }</span>
+                  <span>{ targetArtsName }</span>
                 </div>
                 <div>
                   <button
@@ -276,23 +290,23 @@ export const App = () => {
                 </div>
               </summary>
               { counters.map((counter, num) => {
-                const counterImage = `/images/${counter.sKey}/${counter.sImageFile}`
-                const counterBtnStyle = counter.sImageFile
-                  ? { backgroundImage: `url("${counterImage}")`, backgroundRepeat: 'no-repeat', backgroundSize: 'cover', backgroundPosition: 'center' }
-                  : { }
-                return (
-                  <div key={Math.random()} style={ { display: 'flex', justifyContent: "space-between", padding: "8px"} } className={`detail_item counter_${ num % 2 == 0 ? "a" : "b"}`}>
-                    <div>
-                      <span style={ { minWidth: "40px", display: "inline-block" } }>[{counter.sFire}]</span>
-                      <span>{ counter.sName }：{ counter.sCommand }</span>
+                  const counterImage = `/images/${counter.sKey}/${counter.sImageFile}`
+                  const counterBtnStyle = counter.sImageFile
+                    ? { backgroundImage: `url("${counterImage}")`, backgroundRepeat: 'no-repeat', backgroundSize: 'cover', backgroundPosition: 'center' }
+                    : { }
+                  return (
+                    <div key={counter.sObjectKey} style={ { display: 'flex', justifyContent: "space-between", padding: "8px"} } className={`detail_item counter_${ num % 2 == 0 ? "a" : "b"}`}>
+                      <div>
+                        <span style={ { minWidth: "40px", display: "inline-block" } }>[{counter.sFire}]</span>
+                        <span>{ counter.sName }：{ counter.sCommand }</span>
+                      </div>
+                      <div>
+                        <button
+                          style={ counterBtnStyle }
+                          onClick={ () => setDetailModal({artsName: counter.sName, char: counter.sKey }) }> </button>
+                      </div>
                     </div>
-                    <div>
-                      <button
-                        style={ counterBtnStyle }
-                        onClick={ () => setDetailModal({artsName: counter.sName, char: counter.sKey }) }> </button>
-                    </div>
-                  </div>
-              )
+                )
               })}
             </details>
           )

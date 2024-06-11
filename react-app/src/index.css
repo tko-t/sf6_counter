@@ -46,14 +46,6 @@ small {
   flex-direction: column;
 }
 
-.counter_a {
-  background-color: #ffffff;
-}
-
-.counter_b {
-  background-color: #fef7f7;
-}
-
 .link-block {
   margin: 4px auto;
   font-weight: bold;
@@ -70,11 +62,15 @@ table.detail-arts {
   text-align: right;
   vertical-align: top;
   font-weight: bold;
+  color: #ddd;
 }
 
 .detail-arts-body {
   text-align: left;
   vertical-align: top;
+  padding-left: 4px;
+  font-weight: bold;
+  color: #ddd;
 }
 
 .comment-line {
@@ -82,19 +78,19 @@ table.detail-arts {
 }
 
 .modal {
-  background-color: #cccccc;
-  margin: 30% auto;
+  background-color: #121212;
   min-width: 55%;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  overflow: hidden;
+  overflow: auto;
   position: relative;
+  top: 20%;
 }
 
 .arts-video {
   position: absolute;
-  opacity: 0.3;
+  opacity: 0.5;
   object-fit: cover;
   height: 100%;
   width: 100%;
@@ -109,4 +105,25 @@ button {
   background-image:  repeating-linear-gradient(45deg, #f6f6f6 25%, transparent 25%, transparent 75%, #f6f6f6 75%, #f6f6f6), repeating-linear-gradient(45deg, #f6f6f6 25%, #ffffff 25%, #ffffff 75%, #f6f6f6 75%, #f6f6f6);
   background-position: 0 0, 8px 8px;
   background-size: 16px 16px;  
+}
+
+summary.un-active-row {
+  display: flex;
+  justify-content: space-between;
+  background-color: #d0d0d0;
+  color: #989898;
+}
+
+summary.active-row {
+  display: flex;
+  justify-content: space-between;
+  background-color: #e8e8e8;
+}
+
+.counter_a {
+  background-color: #ffffff;
+}
+
+.counter_b {
+  background-color: #f9f9f9;
 }
