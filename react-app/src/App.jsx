@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CharaSelecter } from './components/character_select';
+import { CharaSelecter } from './components/CharaSelecter';
 import SF6FrameData from './sf6_frames.csv';
 import CsvReader from './lib/CsvReader'
 import { HBox } from './components/HBox';
@@ -9,8 +9,8 @@ import { useCookies } from 'react-cookie';
 export const App = () => {
   const [sf6FrameData, setSf6FrameData] = useState();
   const [characterList, setCharacterList] = useState();
-  const [mySelf, setMySelf] = useState(null);
-  const [enemy, setEnemy]   = useState(null);
+  const [myself, setMyself] = useState();
+  const [enemy, setEnemy]   = useState();
   const [burnOut, setBurnOut] = useState(0);
   const [driverush, setDriverush] = useState(0);
   const [disableFilter, setDisableFilter] = useState(false);
@@ -39,11 +39,11 @@ export const App = () => {
 
   // キャラ表できたらcookieからセット
   useEffect(() => {
-    if (cookies.mySelfValue) {
-      setMySelf(cookies.mySelfValue);
+    if (cookies.myselfValue && cookies.myselfValue !== myself) {
+      setMyself(cookies.myselfValue);
     }
 
-    if (cookies.enemyValue) {
+    if (cookies.enemyValue && cookies.enemyValue !== enemy) {
       setEnemy(cookies.enemyValue);
     }
 
@@ -63,16 +63,14 @@ export const App = () => {
   useEffect(() => {
     if (!characterList) return;
 
-    if (mySelf) {
-      setCookie("mySelfValue", mySelf)
-      setCookie("mySelfLabel", characterList.find( elm => { if(elm.value === mySelf) return elm })?.label)
+    if (myself && cookies.myselfValue !== myself) {
+      setCookie("myselfValue", myself)
     }
 
-    if (enemy) {
+    if (enemy && cookies.enemyValue !== enemy) {
       setCookie("enemyValue", enemy)
-      setCookie("enemyLabel", characterList.find( elm => { if(elm.value === enemy) return elm })?.label)
     }
-  }, [mySelf, enemy])
+  }, [myself, enemy])
 
   // 自分のキャラ選択
   // 敵のキャラ選択
@@ -82,14 +80,14 @@ export const App = () => {
   useEffect(() => {
 
     console.log("match?")
-    if (!mySelf) return;
+    if (!myself) return;
     if (!enemy) return;
     if (!characterList) return;
     if (!sf6FrameData) return;
 
     match()
 
-  }, [mySelf, enemy, burnOut, driverush, disableFilter, characterList, sf6FrameData]);
+  }, [myself, enemy, burnOut, driverush, disableFilter, characterList, sf6FrameData]);
 
 
   // "発生", "ダメージ", "ガード硬直" があって
@@ -98,13 +96,13 @@ export const App = () => {
   const frameTableBySelf = () => {
     if (!sf6FrameData) return;
 
-    if (!frameTableForSelf[mySelf]) {
+    if (!frameTableForSelf[myself]) {
       const reg = /.*(中に|後に|時に|段目).*/
-      frameTableForSelf[mySelf] = sf6FrameData.filter((row) => {
-        return row.key == mySelf && row.fire && 0 < row.damage && row.guard && !reg.test(row.command) && !reg.test(row.name)
+      frameTableForSelf[myself] = sf6FrameData.filter((row) => {
+        return row.key == myself && row.fire && 0 < row.damage && row.guard && !reg.test(row.command) && !reg.test(row.name)
       })
     }
-    return frameTableForSelf[mySelf];
+    return frameTableForSelf[myself];
   };
 
   // "ガード硬直" がある攻撃リスト
@@ -234,7 +232,7 @@ export const App = () => {
   }
 
   const commandList = (key) => {
-    if (!mySelf) return;
+    if (!myself) return;
     if (!enemy) return;
     return (
       <div className="link-block">
@@ -302,10 +300,10 @@ export const App = () => {
 
   // VS押したらキャラ入れ替え
   const reverseCharacter = () => {
-    const nextMySelf = enemy
-    const nextEnemy  = mySelf
+    const nextMyself = enemy
+    const nextEnemy  = myself
 
-    setMySelf(nextMySelf)
+    setMyself(nextMyself)
     setEnemy(nextEnemy)
   }
 
@@ -316,11 +314,11 @@ export const App = () => {
       </Modal>
       <HBox>
         <div style={ { width: "100%" } }>
-          <CharaSelecter placeholder="反撃側" list={characterList} onChange={setMySelf} value={ mySelf }/>
+          <CharaSelecter placeholder="反撃側" list={characterList} onChange={setMyself} value={ myself }/>
           <div className="checkBoxBox">
             <input id="burnout" type="checkbox" checked={ burnOut !== 0 } onChange={ (e) => onBurnout(e) }/>
             <label htmlFor="burnout">burnout</label>
-            { commandList(mySelf) }
+            { commandList(myself) }
           </div>
         </div>
         <div><span onClick={ () => reverseCharacter() }>VS</span></div>
@@ -338,7 +336,7 @@ export const App = () => {
       { summaryHeader() }
       <div>
         { matchingTable.map((matching) => {
-          const targetArtsKey = Object.values(matching)[0].eObjectKey
+          const targetArtsKey = `e${Object.values(matching)[0].eObjectKey}`
           const targetArtsName = Object.values(matching)[0].eName
           const targetArtsFrame = Object.values(matching)[0].eGuard
           const counters = Object.values(matching)[0].counters
@@ -373,7 +371,7 @@ export const App = () => {
                     ? { backgroundImage: `url("${counterImage}")`, backgroundRepeat: 'no-repeat', backgroundSize: 'cover', backgroundPosition: 'center' }
                     : { }
                   return (
-                    <div key={counter.sObjectKey} style={ { display: 'flex', justifyContent: "space-between", padding: "8px"} } className={`detail_item counter_${ num % 2 == 0 ? "a" : "b"}`}>
+                    <div key={`s${counter.sObjectKey}`} style={ { display: 'flex', justifyContent: "space-between", padding: "8px"} } className={`detail_item counter_${ num % 2 == 0 ? "a" : "b"}`}>
                       <div>
                         <span style={ artsTextStyle }>[{counter.sFire}]</span>
                         <span>{ counter.sName }</span>
