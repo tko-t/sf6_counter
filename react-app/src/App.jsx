@@ -97,7 +97,7 @@ export const App = () => {
     if (!sf6FrameData) return;
 
     if (!frameTableForSelf[myself]) {
-      const reg = /.*(中に|後に|時に|段目).*/
+      const reg = /.*(中に|後に|時に|段目|[連打版]).*/
       frameTableForSelf[myself] = sf6FrameData.filter((row) => {
         return row.key == myself && row.fire && 0 < row.damage && row.guard && !reg.test(row.command) && !reg.test(row.name)
       })
