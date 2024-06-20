@@ -18,6 +18,10 @@ export const App = () => {
 
   const [cookies, setCookie, removeCookie] = useCookies();
 
+  useEffect(() => {
+    document.title = 'sf6 counter-attack'
+  }, [])
+
   // csvロード
   useEffect(() => {
     CsvReader(SF6FrameData, setSf6FrameData)
