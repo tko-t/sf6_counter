@@ -204,6 +204,7 @@ export const App = () => {
           <div className="detail_item coutions">
             <ul>
               <li><small>タップで不利フレームより速い発生技を一覧</small></li>
+              <li><small>重ね当て・持続は考慮しない</small></li>
               <li><small>距離やリーチは考慮しない</small></li>
               <li><small>敵の[]は不利フレーム数</small></li>
               <li><small style={ { color: "#ca0000" } }>赤文字</small><small>はガードで有利とられる</small></li>
@@ -211,7 +212,7 @@ export const App = () => {
               <li><small>✅️ burnout ... ガード硬直4F増し</small></li>
               <li><small>✅️ driverush ... ガード硬直2F増し(通常、特殊技)</small></li>
               <li><small>✅️ all ... 反確がないものも表示</small></li>
-              <li><small>202405 Ver.</small></li>
+              <li><small>2024.06.26 Ver.</small></li>
             </ul>
           </div>
         </details>
