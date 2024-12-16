@@ -212,7 +212,7 @@ export const App = () => {
               <li><small>✅️ burnout ... ガード硬直4F増し</small></li>
               <li><small>✅️ driverush ... ガード硬直2F増し(通常、特殊技)</small></li>
               <li><small>✅️ all ... 反確がないものも表示</small></li>
-              <li><small>2024.06.26 Ver.</small></li>
+              <li><small>2024.12.02 Ver.</small></li>
             </ul>
           </div>
         </details>
